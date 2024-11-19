@@ -1,0 +1,13 @@
+package = tracy
+headers = tracy/TracyC.h
+compilerOpts = -Ibuild/tracy/public
+
+libraryPaths.linux_x64 = build/tracy-binaries/linux-x64
+libraryPaths.linux_arm64 = build/tracy-binaries/linux-arm64
+libraryPaths.mingw_x64 = build/tracy-binaries/windows-x64
+libraryPaths.macos_x64 = build/tracy-binaries/macos-x64
+libraryPaths.macos_arm64 = build/tracy-binaries/macos-arm64
+
+staticLibraries.linux = libTracyClient.a
+staticLibraries.macos = libTracyClient.a
+staticLibraries.mingw = TracyClient.lib
