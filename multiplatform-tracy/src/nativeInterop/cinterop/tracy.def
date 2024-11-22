@@ -1,6 +1,6 @@
 package = tracy
 headers = tracy/TracyC.h
-compilerOpts = -Ibuild/tracy/public
+compilerOpts = -Ibuild/tracy/public -DTRACY_ENABLE=1
 
 libraryPaths.linux_x64 = build/tracy-binaries/linux-x64
 libraryPaths.linux_arm64 = build/tracy-binaries/linux-arm64
@@ -11,3 +11,9 @@ libraryPaths.macos_arm64 = build/tracy-binaries/macos-arm64
 staticLibraries.linux = libTracyClient.a
 staticLibraries.macos = libTracyClient.a
 staticLibraries.mingw = TracyClient.lib
+---
+#include <tracy/TracyC.h>
+
+inline void mmp_tracy_emit_frame_mark(int8_t* data) {
+    ___tracy_emit_frame_mark((char*) data);
+}

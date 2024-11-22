@@ -1,5 +1,6 @@
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.internal.extensions.stdlib.capitalized
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.incremental.createDirectory
 
 /*
@@ -60,7 +61,7 @@ val updateTracyHeaders: Exec = tasks.create<Exec>("updateTracyHeaders") {
 
 fun downloadSdlBinariesTask(platform: String, arch: String): Download =
     tasks.create<Download>("downloadTracyBinaries${platform.capitalized()}${arch.capitalized()}") {
-        val fileName = "build-$platform-$arch-debug.zip"
+        val fileName = "build-$platform-client-$arch-debug.zip"
         val destPath = buildDirectory.resolve("tracy-binaries").resolve(fileName)
         
         group = "tracyBinaries"
@@ -80,13 +81,12 @@ val downloadSdlBinariesMacosArm64: Download = downloadSdlBinariesTask("macos", "
 
 fun extractTracyBinariesTask(platform: String, arch: String): Copy =
     tasks.create<Copy>("extractTracyBinaries${platform.capitalized()}${arch.capitalized()}") {
-        val platformPair = "$platform-$arch"
         val downloadTaskName = "downloadTracyBinaries${platform.capitalized()}${arch.capitalized()}"
-        val destPath = buildDirectory.resolve("tracy-binaries").resolve(platformPair)
+        val destPath = buildDirectory.resolve("tracy-binaries").resolve("$platform-$arch")
         
         group = "tracyBinaries"
         dependsOn(downloadTaskName)
-        from(zipTree(buildDirectory.resolve("tracy-binaries").resolve("build-$platformPair-debug.zip")))
+        from(zipTree(buildDirectory.resolve("tracy-binaries").resolve("build-$platform-client-$arch-debug.zip")))
         into(destPath)
         onlyIf { !destPath.exists() }
     }
@@ -122,7 +122,23 @@ kotlin {
             }
         }
     }
+    
+    linuxX64 {
+        binaries {
+            executable {
+                entryPoint = "main"
+            }
+        }
+    }
+    
     applyDefaultHierarchyTemplate()
+    
+    sourceSets {
+        @OptIn(ExperimentalKotlinGradlePluginApi::class)
+        compilerOptions {
+            optIn.add("kotlinx.cinterop.ExperimentalForeignApi")
+        }
+    }
 }
 
 val dokkaJar by tasks.registering(Jar::class) {
