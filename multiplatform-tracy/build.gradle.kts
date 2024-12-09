@@ -1,7 +1,11 @@
 import de.undercouch.gradle.tasks.download.Download
 import org.gradle.internal.extensions.stdlib.capitalized
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.incremental.createDirectory
+import java.nio.file.Path
+import kotlin.io.path.div
+import kotlin.io.path.exists
+import kotlin.io.path.notExists
+import kotlin.io.path.createDirectories
 
 /*
  * Copyright 2024 Karma Krafts & associates
