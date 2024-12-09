@@ -1,6 +1,6 @@
 [versions]
-multiplatformTracy = "1.0.0"
-kotlin = "2.0.21"
+multiplatformTracy = "2.0.0"
+kotlin = "2.1.0"
 dokka = "1.9.20" # https://github.com/Kotlin/dokka/releases"
 downloadTask = "5.6.0" # https://plugins.gradle.org/plugin/de.undercouch.download
 tracy = "v0.11.1" # https://github.com/wolfpld/tracy/releases

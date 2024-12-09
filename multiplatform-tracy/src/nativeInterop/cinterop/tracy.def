@@ -1,4 +1,4 @@
-package = tracy
+package = io.karma.tracy
 headers = tracy/TracyC.h
 compilerOpts = -Ibuild/tracy/public -DTRACY_ENABLE=1
 
