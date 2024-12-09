@@ -1,17 +1,19 @@
 package = io.karma.tracy
 headers = tracy/TracyC.h
-compilerOpts = -Ibuild/tracy/public -DTRACY_ENABLE=1
+compilerOpts = -Ibuild/tracy/headers/public -DTRACY_ENABLE=1
 
-libraryPaths.linux_x64 = build/tracy-binaries/linux-x64
-libraryPaths.linux_arm64 = build/tracy-binaries/linux-arm64
-libraryPaths.mingw_x64 = build/tracy-binaries/windows-x64
-libraryPaths.macos_x64 = build/tracy-binaries/macos-x64
-libraryPaths.macos_arm64 = build/tracy-binaries/macos-arm64
+libraryPaths.linux_x64 = build/tracy/linux-x64
+libraryPaths.linux_arm64 = build/tracy/linux-arm64
+libraryPaths.mingw_x64 = build/tracy/windows-x64
+libraryPaths.macos_x64 = build/tracy/macos-x64
+libraryPaths.macos_arm64 = build/tracy/macos-arm64
 
 staticLibraries.linux = libTracyClient.a
 staticLibraries.macos = libTracyClient.a
 staticLibraries.mingw = TracyClient.lib
+
 ---
+
 #include <tracy/TracyC.h>
 
 inline void mmp_tracy_emit_frame_mark(int8_t* data) {

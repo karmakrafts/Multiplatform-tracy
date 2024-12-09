@@ -2,10 +2,10 @@ import de.undercouch.gradle.tasks.download.Download
 import org.gradle.internal.extensions.stdlib.capitalized
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import java.nio.file.Path
+import kotlin.io.path.createDirectories
 import kotlin.io.path.div
 import kotlin.io.path.exists
 import kotlin.io.path.notExists
-import kotlin.io.path.createDirectories
 
 /*
  * Copyright 2024 Karma Krafts & associates
@@ -38,40 +38,42 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-val buildDirectory = layout.buildDirectory.get().asFile
+operator fun DirectoryProperty.div(name: String): Path = get().asFile.toPath() / name
+
 val ensureBuildDirectory: Task = tasks.create("ensureBuildDirectory") {
-    doLast { buildDirectory.createDirectories() }
-    onlyIf { !buildDirectory.exists() }
+    val path = layout.buildDirectory.get().asFile.toPath()
+    doLast { path.createDirectories() }
+    onlyIf { path.notExists() }
 }
 
 val downloadTracyHeaders: Exec = tasks.create<Exec>("downloadTracyHeaders") {
     val tracyVersion = libs.versions.tracy.get()
-    
     group = "tracyHeaders"
     dependsOn(ensureBuildDirectory)
-    workingDir = buildDirectory
-    commandLine("git", "clone", "--branch", tracyVersion, "--single-branch", "https://github.com/wolfpld/tracy", "tracy")
-    onlyIf { !buildDirectory.resolve("tracy").exists() }
+    workingDir = layout.buildDirectory.get().asFile
+    commandLine(
+        "git", "clone", "--branch", tracyVersion, "--single-branch", "https://github.com/wolfpld/tracy", "tracy/headers"
+    )
+    onlyIf { !(layout.buildDirectory / "tracy" / "headers").exists() }
 }
 
 val updateTracyHeaders: Exec = tasks.create<Exec>("updateTracyHeaders") {
     group = "tracyHeaders"
     dependsOn(downloadTracyHeaders)
-    workingDir = buildDirectory.resolve("tracy")
+    workingDir = (layout.buildDirectory / "tracy" / "headers").toFile()
     commandLine("git", "pull", "--force")
-    onlyIf { buildDirectory.resolve("tracy").exists() }
+    onlyIf { (layout.buildDirectory / "tracy" / "headers").exists() }
 }
-
 
 fun downloadSdlBinariesTask(platform: String, arch: String): Download =
     tasks.create<Download>("downloadTracyBinaries${platform.capitalized()}${arch.capitalized()}") {
         val fileName = "build-$platform-client-$arch-debug.zip"
-        val destPath = buildDirectory.resolve("tracy-binaries").resolve(fileName)
-        
+        val destPath = layout.buildDirectory / "tracy" / fileName
+
         group = "tracyBinaries"
         dependsOn(ensureBuildDirectory)
         src("https://git.karmakrafts.dev/api/v4/projects/345/packages/generic/build/${libs.versions.tracy.get()}/$fileName")
-        dest(destPath)
+        dest(destPath.toFile())
         overwrite(true)
         onlyIf { !destPath.exists() }
     }
@@ -86,11 +88,11 @@ val downloadSdlBinariesMacosArm64: Download = downloadSdlBinariesTask("macos", "
 fun extractTracyBinariesTask(platform: String, arch: String): Copy =
     tasks.create<Copy>("extractTracyBinaries${platform.capitalized()}${arch.capitalized()}") {
         val downloadTaskName = "downloadTracyBinaries${platform.capitalized()}${arch.capitalized()}"
-        val destPath = buildDirectory.resolve("tracy-binaries").resolve("$platform-$arch")
-        
+        val destPath = layout.buildDirectory / "tracy" / "$platform-$arch"
+
         group = "tracyBinaries"
         dependsOn(downloadTaskName)
-        from(zipTree(buildDirectory.resolve("tracy-binaries").resolve("build-$platform-client-$arch-debug.zip")))
+        from(zipTree(layout.buildDirectory / "tracy" / "build-$platform-client-$arch-debug.zip"))
         into(destPath)
         onlyIf { !destPath.exists() }
     }
@@ -118,31 +120,15 @@ kotlin {
         target.compilations.getByName("main") {
             cinterops {
                 val tracy by creating {
-                    defFile("src/nativeInterop/cinterop/tracy.def")
                     tasks.getByName(interopProcessingTaskName) {
-                        dependsOn(extractTracyBinaries, updateTracyHeaders)
+                        dependsOn(extractTracyBinaries)
+                        dependsOn(updateTracyHeaders)
                     }
                 }
             }
         }
     }
-    
-    linuxX64 {
-        binaries {
-            executable {
-                entryPoint = "main"
-            }
-        }
-    }
-    
     applyDefaultHierarchyTemplate()
-    
-    sourceSets {
-        @OptIn(ExperimentalKotlinGradlePluginApi::class)
-        compilerOptions {
-            optIn.add("kotlinx.cinterop.ExperimentalForeignApi")
-        }
-    }
 }
 
 val dokkaJar by tasks.registering(Jar::class) {
@@ -199,6 +185,11 @@ publishing {
                     }
                 }
                 developers {
+                    developer {
+                        id = "kitsunealex"
+                        name = "KitsuneAlex"
+                        url = "https://git.karmakrafts.dev/KitsuneAlex"
+                    }
                     developer {
                         id = "cach30verfl0w"
                         name = "Cedric Hammes"
