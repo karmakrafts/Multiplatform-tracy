@@ -40,7 +40,7 @@ java {
 
 val buildDirectory = layout.buildDirectory.get().asFile
 val ensureBuildDirectory: Task = tasks.create("ensureBuildDirectory") {
-    doLast { buildDirectory.createDirectory() }
+    doLast { buildDirectory.createDirectories() }
     onlyIf { !buildDirectory.exists() }
 }
 
